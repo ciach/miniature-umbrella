@@ -185,7 +185,7 @@
 }
 
 .hand-detector__round-message {
-  margin-top: 0.75rem;
+  margin-top: 0;
   font-size: 1.1rem;
   font-weight: 600;
   padding: 0.75rem 1.25rem;
@@ -196,6 +196,19 @@
   justify-content: center;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
   color: #ffffff;
+}
+
+.hand-detector__round-message-area {
+  min-height: 3.5rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+.hand-detector__round-message--hidden {
+  visibility: hidden;
 }
 
 .hand-detector__round-message--player {

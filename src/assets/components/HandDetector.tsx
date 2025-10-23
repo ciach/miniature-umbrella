@@ -375,14 +375,23 @@ export default function HandDetector() {
           </div>
         </div>
 
-        {roundMessage && (
-          <div
-            className={`hand-detector__round-message${roundOutcomeClass}`}
-            role="status"
-          >
-            {roundMessage}
-          </div>
-        )}
+        <div className="hand-detector__round-message-area" aria-live="polite">
+          {roundMessage ? (
+            <div
+              className={`hand-detector__round-message${roundOutcomeClass}`}
+              role="status"
+            >
+              {roundMessage}
+            </div>
+          ) : (
+            <div
+              className="hand-detector__round-message hand-detector__round-message--hidden"
+              aria-hidden="true"
+            >
+              Placeholder
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="hand-detector__rules">
