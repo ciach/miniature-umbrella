@@ -1,7 +1,7 @@
 .hand-detector {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 2rem;
   padding: 1rem;
   flex-wrap: wrap;
@@ -12,7 +12,7 @@
 .hand-detector__viewer {
   text-align: center;
   position: relative;
-  flex: 0 1 640px;
+  flex: 0 0 auto;
 }
 
 .hand-detector__gesture {
@@ -86,7 +86,7 @@
   font-size: 0.95rem;
   line-height: 1.8;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  margin-top: clamp(4rem, 6vw, 6.5rem);
+  margin-top: 230px;
 }
 
 .hand-detector__rules h3 {
