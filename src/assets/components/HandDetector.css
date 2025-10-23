@@ -82,7 +82,7 @@
   font-size: 0.95rem;
   line-height: 1.8;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  margin-top: clamp(1.5rem, 5vw, 3rem);
+  margin-top: clamp(7rem, 5vw, 10rem);
 }
 
 .hand-detector__rules h3 {
