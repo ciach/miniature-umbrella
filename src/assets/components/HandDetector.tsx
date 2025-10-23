@@ -1,5 +1,5 @@
 // HandDetector.tsx
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   HandLandmarker,
   FilesetResolver
@@ -16,6 +16,33 @@ const HAND_CONNECTIONS: ReadonlyArray<[number, number]> = [
   [0,17], [17,18],[18,19], [19,20]
 ];
 
+const GESTURES = ["rock", "paper", "scissors", "lizard", "spock"] as const;
+type Gesture = typeof GESTURES[number];
+
+const WIN_MAP: Record<Gesture, ReadonlyArray<Gesture>> = {
+  rock: ["scissors", "lizard"],
+  paper: ["rock", "spock"],
+  scissors: ["paper", "lizard"],
+  lizard: ["spock", "paper"],
+  spock: ["scissors", "rock"]
+};
+
+type ScoreBoard = { player: number; computer: number; ties: number };
+
+const getRandomGesture = (): Gesture =>
+  GESTURES[Math.floor(Math.random() * GESTURES.length)];
+
+const isGesture = (value: string): value is Gesture =>
+  (GESTURES as readonly string[]).includes(value as Gesture);
+
+const decideOutcome = (player: Gesture, computer: Gesture): "player" | "computer" | "tie" => {
+  if (player === computer) return "tie";
+  return WIN_MAP[player].includes(computer) ? "player" : "computer";
+};
+
+const formatGestureLabel = (value: string) =>
+  value ? value.charAt(0).toUpperCase() + value.slice(1) : "--";
+
 export default function HandDetector() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,6 +51,136 @@ export default function HandDetector() {
   const [gesture, setGesture] = useState<string>("");
   const [metrics, setMetrics] = useState<SignMetrics | null>(null);
   const [showDebug, setShowDebug] = useState(false);
+  const [score, setScore] = useState<ScoreBoard>({ player: 0, computer: 0, ties: 0 });
+  const [computerGesture, setComputerGesture] = useState<Gesture | "">("");
+  const [playerGesture, setPlayerGesture] = useState<Gesture | "unknown" | "">("");
+  const [roundOutcome, setRoundOutcome] = useState<"player" | "computer" | "tie" | "none">("none");
+  const [roundMessage, setRoundMessage] = useState<string>("");
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const [countdown, setCountdown] = useState<string | null>(null);
+
+  const gestureRef = useRef<string>("");
+  const countdownTimersRef = useRef<number[]>([]);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const clearCountdownTimers = useCallback(() => {
+    for (const timer of countdownTimersRef.current) {
+      window.clearTimeout(timer);
+    }
+    countdownTimersRef.current = [];
+  }, []);
+
+  const playBeep = useCallback((frequency: number, duration = 220) => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioCtx();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") {
+        void ctx.resume();
+      }
+
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+
+      oscillator.frequency.setValueAtTime(frequency, now);
+      oscillator.type = "sine";
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration / 1000);
+
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+
+      oscillator.start(now);
+      oscillator.stop(now + duration / 1000);
+    } catch (error) {
+      console.warn("Unable to play countdown beep", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearCountdownTimers();
+      if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+        void audioCtxRef.current.close();
+      }
+    };
+  }, [clearCountdownTimers]);
+
+  useEffect(() => {
+    gestureRef.current = gesture;
+  }, [gesture]);
+
+  const startRound = useCallback(() => {
+    if (!running || isCountingDown) return;
+
+    clearCountdownTimers();
+    setIsCountingDown(true);
+    setRoundOutcome("none");
+    setRoundMessage("");
+    setComputerGesture("");
+    setPlayerGesture("");
+    setCountdown(null);
+
+    const steps: Array<{ label: string; delay: number; frequency: number }> = [
+      { label: "3", delay: 0, frequency: 540 },
+      { label: "2", delay: 1000, frequency: 600 },
+      { label: "1", delay: 2000, frequency: 660 },
+      { label: "Shoot!", delay: 3000, frequency: 760 }
+    ];
+
+    steps.forEach(({ label, delay, frequency }, index) => {
+      const timerId = window.setTimeout(() => {
+        setCountdown(label);
+        playBeep(frequency);
+
+        const isFinalStep = index === steps.length - 1;
+        if (!isFinalStep) return;
+
+        const currentGesture = gestureRef.current;
+        if (!currentGesture || !isGesture(currentGesture)) {
+          setPlayerGesture("unknown");
+          setRoundMessage("Couldn't read your gesture in time. Try again!");
+          setRoundOutcome("none");
+          setIsCountingDown(false);
+          const hideId = window.setTimeout(() => setCountdown(null), 900);
+          countdownTimersRef.current.push(hideId);
+          return;
+        }
+
+        const playerMove = currentGesture;
+        const computerMove = getRandomGesture();
+        const outcome = decideOutcome(playerMove, computerMove);
+
+        setPlayerGesture(playerMove);
+        setComputerGesture(computerMove);
+        setRoundOutcome(outcome);
+        setRoundMessage(
+          outcome === "player"
+            ? "You win this round!"
+            : outcome === "computer"
+              ? "Computer wins this round."
+              : "It's a tie."
+        );
+        setScore(prev => ({
+          player: prev.player + (outcome === "player" ? 1 : 0),
+          computer: prev.computer + (outcome === "computer" ? 1 : 0),
+          ties: prev.ties + (outcome === "tie" ? 1 : 0)
+        }));
+
+        setIsCountingDown(false);
+        const hideId = window.setTimeout(() => setCountdown(null), 900);
+        countdownTimersRef.current.push(hideId);
+      }, delay);
+
+      countdownTimersRef.current.push(timerId);
+    });
+  }, [clearCountdownTimers, isCountingDown, playBeep, running]);
 
   // small stability buffer
   const bufferRef = useRef<string[]>([]);
@@ -137,13 +294,39 @@ export default function HandDetector() {
     };
   }, [handLandmarker, running]);
 
+  const roundOutcomeClass = roundOutcome !== "none"
+    ? ` hand-detector__round-message--${roundOutcome}`
+    : "";
+
   return (
     <div className="hand-detector">
       <div className="hand-detector__viewer">
         <h2 className="hand-detector__gesture">Gesture: {gesture || "None"}</h2>
 
+        <div className="hand-detector__scoreboard" aria-live="polite">
+          <div className="hand-detector__score hand-detector__score--player">
+            <span className="hand-detector__score-label">You</span>
+            <span className="hand-detector__score-value">{score.player}</span>
+          </div>
+          <div className="hand-detector__score hand-detector__score--computer">
+            <span className="hand-detector__score-label">Computer</span>
+            <span className="hand-detector__score-value">{score.computer}</span>
+          </div>
+          <div className="hand-detector__score hand-detector__score--ties">
+            <span className="hand-detector__score-label">Ties</span>
+            <span className="hand-detector__score-value">{score.ties}</span>
+          </div>
+        </div>
+
         <div className="hand-detector__controls">
-          <button onClick={startCamera}>Start Camera</button>
+          <button type="button" onClick={startCamera}>Start Camera</button>
+          <button
+            type="button"
+            onClick={startRound}
+            disabled={!running || isCountingDown}
+          >
+            Play Round
+          </button>
           <label className="hand-detector__debug-toggle">
             <input
               type="checkbox"
@@ -165,6 +348,11 @@ export default function HandDetector() {
             ref={canvasRef}
             className="hand-detector__canvas"
           />
+          {countdown && (
+            <div className="hand-detector__countdown">
+              <span>{countdown}</span>
+            </div>
+          )}
           {showDebug && metrics && (
             <div className="hand-detector__debug-overlay">
               <div><b>Gaps</b> IM={metrics.gapIM.toFixed(3)} MR={metrics.gapMR.toFixed(3)} RP={metrics.gapRP.toFixed(3)}</div>
@@ -175,6 +363,26 @@ export default function HandDetector() {
             </div>
           )}
         </div>
+
+        <div className="hand-detector__round-info" aria-live="polite">
+          <div className="hand-detector__round-item">
+            <span className="hand-detector__round-item-label">You</span>
+            <span className="hand-detector__round-item-value">{formatGestureLabel(playerGesture)}</span>
+          </div>
+          <div className="hand-detector__round-item">
+            <span className="hand-detector__round-item-label">Computer</span>
+            <span className="hand-detector__round-item-value">{formatGestureLabel(computerGesture)}</span>
+          </div>
+        </div>
+
+        {roundMessage && (
+          <div
+            className={`hand-detector__round-message${roundOutcomeClass}`}
+            role="status"
+          >
+            {roundMessage}
+          </div>
+        )}
       </div>
 
       <div className="hand-detector__rules">

@@ -41,6 +41,8 @@
 .hand-detector__video-wrapper {
   position: relative;
   display: inline-block;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .hand-detector__video {
@@ -57,6 +59,7 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: 1;
 }
 
 .hand-detector__debug-overlay {
@@ -69,6 +72,7 @@
   font-family: monospace;
   font-size: 12px;
   text-align: left;
+  z-index: 3;
 }
 
 .hand-detector__rules {
@@ -82,7 +86,7 @@
   font-size: 0.95rem;
   line-height: 1.8;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  margin-top: clamp(7rem, 5vw, 10rem);
+  margin-top: clamp(4rem, 6vw, 6.5rem);
 }
 
 .hand-detector__rules h3 {
@@ -94,4 +98,136 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.hand-detector__scoreboard {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.hand-detector__score {
+  min-width: 110px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.hand-detector__score--player {
+  background: linear-gradient(135deg, rgba(72, 227, 125, 0.55), rgba(30, 120, 70, 0.35));
+}
+
+.hand-detector__score--computer {
+  background: linear-gradient(135deg, rgba(255, 118, 118, 0.55), rgba(139, 40, 40, 0.3));
+}
+
+.hand-detector__score--ties {
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.55), rgba(130, 104, 40, 0.3));
+}
+
+.hand-detector__score-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hand-detector__score-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hand-detector__controls button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.hand-detector__debug-toggle input {
+  margin-right: 0.35rem;
+}
+
+.hand-detector__round-info {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.hand-detector__round-item {
+  text-align: center;
+  min-width: 120px;
+}
+
+.hand-detector__round-item-label {
+  display: block;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.hand-detector__round-item-value {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.hand-detector__round-message {
+  margin-top: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+}
+
+.hand-detector__round-message--player {
+  background: rgba(72, 227, 125, 0.25);
+  color: #48e37d;
+}
+
+.hand-detector__round-message--computer {
+  background: rgba(255, 118, 118, 0.25);
+  color: #ff7676;
+}
+
+.hand-detector__round-message--tie {
+  background: rgba(255, 209, 102, 0.25);
+  color: #ffd166;
+}
+
+.hand-detector__countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+  font-weight: 700;
+  pointer-events: none;
+  z-index: 2;
+  backdrop-filter: blur(2px);
+}
+
+.hand-detector__countdown span {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
