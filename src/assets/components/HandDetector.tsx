@@ -5,6 +5,7 @@ import {
   FilesetResolver
 } from "@mediapipe/tasks-vision";
 import { classifySign, type SignMetrics } from "../utils/classifySign";
+import "./HandDetector.css";
 
 // same HAND_CONNECTIONS as before
 const HAND_CONNECTIONS: ReadonlyArray<[number, number]> = [
@@ -137,60 +138,60 @@ export default function HandDetector() {
   }, [handLandmarker, running]);
 
   return (
-    <div style={{ textAlign: "center", position: "relative" }}>
-      <h2>Gesture: {gesture || "None"}</h2>
+    <div className="hand-detector">
+      <div className="hand-detector__viewer">
+        <h2 className="hand-detector__gesture">Gesture: {gesture || "None"}</h2>
 
-      <div style={{ marginBottom: 8 }}>
-        <button onClick={startCamera}>Start Camera</button>
-        <label style={{ marginLeft: 12 }}>
-          <input
-            type="checkbox"
-            checked={showDebug}
-            onChange={(e) => setShowDebug(e.target.checked)}
-            style={{ marginRight: 6 }}
+        <div className="hand-detector__controls">
+          <button onClick={startCamera}>Start Camera</button>
+          <label className="hand-detector__debug-toggle">
+            <input
+              type="checkbox"
+              checked={showDebug}
+              onChange={(e) => setShowDebug(e.target.checked)}
+            />
+            Debug
+          </label>
+        </div>
+
+        <div className="hand-detector__video-wrapper">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="hand-detector__video"
           />
-          Debug
-        </label>
+          <canvas
+            ref={canvasRef}
+            className="hand-detector__canvas"
+          />
+          {showDebug && metrics && (
+            <div className="hand-detector__debug-overlay">
+              <div><b>Gaps</b> IM={metrics.gapIM.toFixed(3)} MR={metrics.gapMR.toFixed(3)} RP={metrics.gapRP.toFixed(3)}</div>
+              <div>spockRatio={metrics.spockRatio.toFixed(3)}  cv={metrics.cv.toFixed(3)}</div>
+              <div>thumb={metrics.thumbToIndexMCP.toFixed(3)}  out={String(metrics.thumbOut)}  along={String(metrics.thumbAlong)}</div>
+              <div>ext: I={String(metrics.indexExt)} M={String(metrics.middleExt)} R={String(metrics.ringExt)} P={String(metrics.pinkyExt)}  cnt={metrics.extendedCount}</div>
+              <div>cosIM={metrics.cosIM.toFixed(3)}  (scissors aim)</div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div style={{ position: "relative", display: "inline-block" }}>
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          style={{ transform: "scaleX(-1)", width: "640px", maxWidth: "100%" }}
-        />
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "640px",
-            maxWidth: "100%",
-            pointerEvents: "none"
-          }}
-        />
-        {showDebug && metrics && (
-          <div
-            style={{
-              position: "absolute",
-              left: 8,
-              top: 8,
-              background: "rgba(0,0,0,0.55)",
-              padding: "8px 10px",
-              borderRadius: 8,
-              fontFamily: "monospace",
-              fontSize: 12
-            }}
-          >
-            <div><b>Gaps</b> IM={metrics.gapIM.toFixed(3)} MR={metrics.gapMR.toFixed(3)} RP={metrics.gapRP.toFixed(3)}</div>
-            <div>spockRatio={metrics.spockRatio.toFixed(3)}  cv={metrics.cv.toFixed(3)}</div>
-            <div>thumb={metrics.thumbToIndexMCP.toFixed(3)}  out={String(metrics.thumbOut)}  along={String(metrics.thumbAlong)}</div>
-            <div>ext: I={String(metrics.indexExt)} M={String(metrics.middleExt)} R={String(metrics.ringExt)} P={String(metrics.pinkyExt)}  cnt={metrics.extendedCount}</div>
-            <div>cosIM={metrics.cosIM.toFixed(3)}  (scissors aim)</div>
-          </div>
-        )}
+      <div className="hand-detector__rules">
+        <h3>It's very simple.</h3>
+        <div className="hand-detector__rules-content">
+          <div><strong>Scissors</strong> cuts <strong>Paper</strong>,</div>
+          <div><strong>Paper</strong> covers <strong>Rock</strong>,</div>
+          <div><strong>Rock</strong> crushes <strong>Lizard</strong>,</div>
+          <div><strong>Lizard</strong> poisons <strong>Spock</strong>,</div>
+          <div><strong>Spock</strong> smashes <strong>Scissors</strong>,</div>
+          <div><strong>Scissors</strong> decapitates <strong>Lizard</strong>,</div>
+          <div><strong>Lizard</strong> eats <strong>Paper</strong>,</div>
+          <div><strong>Paper</strong> disproves <strong>Spock</strong>,</div>
+          <div><strong>Spock</strong> vaporizes <strong>Rock</strong>,</div>
+          <div>and as it always has,</div>
+          <div><strong>Rock</strong> crushes <strong>Scissors</strong>.</div>
+        </div>
       </div>
     </div>
   );
