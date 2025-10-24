@@ -395,7 +395,7 @@ export default function HandDetector() {
       </div>
 
       <div className="hand-detector__rules">
-        <h3>It's very simple.</h3>
+        <h3><a href="https://www.youtube.com/shorts/ZdjqGHmUFTg" target="_blank" rel="noopener noreferrer">It's very simple.</a></h3>
         <div className="hand-detector__rules-content">
           <div><strong>Scissors</strong> cuts <strong>Paper</strong>,</div>
           <div><strong>Paper</strong> covers <strong>Rock</strong>,</div>
